@@ -37,7 +37,7 @@ class ProductsController extends Controller
             'label' => '<span class="glyphicon glyphicon-floppy-disk"></span>'
         ]);
         
-        $title= "";
+        $title= "Novo Produto";
         
         return view('admin.products.save', compact('form', 'title'));
     }
@@ -53,7 +53,7 @@ class ProductsController extends Controller
         $form = $formBuilder->create(ProductForm::class);
         $formValues = $form->getFieldValues();
         if($formValues['value']){
-            $formValues['value'] = str_replace(array('.',','), array('',''), $formValues['value']);
+            $formValues['value'] = str_replace(',', '.', str_replace('.', '', $formValues['value']));
         }
         Product::create($formValues);
         return redirect()->to('admin/products/');
@@ -78,7 +78,22 @@ class ProductsController extends Controller
      */
     public function edit(Product $product)
     {
-        //
+        
+        $product->value = number_format($product->value, 2, ',', '.');
+        
+        $form = \FormBuilder::create(ProductForm::class, [
+            'method' => 'PUT',
+            'model' => $product,
+            'url' => route('admin.products.update', ['id' => $product->id])
+        ]);
+        
+        $form->add('submit', 'submit', [
+            'label' => '<span class="glyphicon glyphicon-floppy-disk"></span>'
+        ]);
+        
+        $title= "Editar Produto";
+        
+        return view('admin.products.save', compact('form', 'title'));
     }
 
     /**
@@ -88,9 +103,16 @@ class ProductsController extends Controller
      * @param  \App\Product  $product
      * @return \Illuminate\Http\Response
      */
-    public function update(Request $request, Product $product)
+    public function update(FormBuilder $formBuilder, Product $product)
     {
-        //
+        $form = $formBuilder->create(ProductForm::class);
+        $formValues = $form->getFieldValues();
+        if($formValues['value']){
+            $formValues['value'] = str_replace(',', '.', str_replace('.', '', $formValues['value']));
+        }
+        $product->fill($formValues);
+        $product->save();
+        return redirect()->to('admin/products/');
     }
 
     /**
@@ -101,6 +123,7 @@ class ProductsController extends Controller
      */
     public function destroy(Product $product)
     {
-        //
+        $product->delete();
+        return redirect()->to('admin/products/');
     }
 }
